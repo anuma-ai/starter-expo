@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "@privy-io/expo-starter",
-    "slug": "expo-starter",
+    "name": "example-expo",
+    "slug": "example-expo",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -22,7 +22,8 @@
       "infoPlist": {
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true
-        }
+        },
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -35,7 +36,11 @@
     "extra": {
       "privyAppId": "cmhwlx82v000xle0cde4rjy5y",
       "privyClientId": "client-WY6SXGPztSeruyfqrZxaTtCr1QwNiSirc2Huj48Eav8SM",
-      "passkeyAssociatedDomain": "https://<your-associated-domain>"
+      "passkeyAssociatedDomain": "https://<your-associated-domain>",
+      "router": {},
+      "eas": {
+        "projectId": "a3c36bef-277f-4ca9-8635-03c6d257d0fe"
+      }
     },
     "plugins": [
       "expo-router",
@@ -56,6 +61,7 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "owner": "zetachain"
   }
 }
