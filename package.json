@@ -16,7 +16,7 @@
     "@privy-io/expo-native-extensions": "^0.0.5",
     "@react-native-menu/menu": "^2.0.0",
     "@react-navigation/native": "^7.1.6",
-    "@reverbia/sdk": "1.0.0-next.20251208093930",
+    "@reverbia/sdk": "1.0.0-next.20251208102554",
     "@solana/web3.js": "^1.98.4",
     "buffer": "^6.0.3",
     "expo": "~53.0.9",
