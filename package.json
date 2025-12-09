@@ -16,7 +16,7 @@
     "@privy-io/expo-native-extensions": "^0.0.5",
     "@react-native-menu/menu": "^2.0.0",
     "@react-navigation/native": "^7.1.6",
-    "@reverbia/sdk": "1.0.0-next.20251208102554",
+    "@reverbia/sdk": "1.0.0-next.20251209090511",
     "@solana/web3.js": "^1.98.4",
     "buffer": "^6.0.3",
     "expo": "~53.0.9",
@@ -28,6 +28,8 @@
     "expo-constants": "~17.1.6",
     "expo-crypto": "~14.1.4",
     "expo-font": "~13.3.1",
+    "expo-image-picker": "^17.0.9",
+    "expo-linear-gradient": "^15.0.8",
     "expo-linking": "~7.1.4",
     "expo-router": "~5.0.6",
     "expo-secure-store": "~14.2.3",
@@ -47,7 +49,7 @@
     "react-native-screens": "~4.10.0",
     "react-native-svg": "15.11.2",
     "react-native-webview": "13.13.5",
-    "viem": "^2.31.6",
+    "viem": "^2.32.6",
     "web-streams-polyfill": "^4.2.0"
   },
   "resolutions": {
@@ -62,6 +64,8 @@
   },
   "private": true,
   "pnpm": {
-    "overrides": {}
+    "overrides": {
+      "viem": "2.32.0"
+    }
   }
 }
