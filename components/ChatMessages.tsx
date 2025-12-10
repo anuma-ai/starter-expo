@@ -121,7 +121,10 @@ export default function ChatMessages({ messages }: ChatMessagesProps) {
         style={styles.scrollView}
         contentContainerStyle={[
           styles.contentContainer,
-          { paddingTop: insets.top + 60 },
+          {
+            paddingTop: insets.top + 60,
+            paddingBottom: insets.bottom + 80,
+          },
         ]}
         showsVerticalScrollIndicator={false}
       >
@@ -184,9 +187,16 @@ export default function ChatMessages({ messages }: ChatMessagesProps) {
           );
         })}
       </ScrollView>
+      {/* Top gradient */}
       <LinearGradient
         colors={["#ffffff", "rgba(255, 255, 255, 0)"]}
         style={[styles.topGradient, { height: insets.top + 80 }]}
+        pointerEvents="none"
+      />
+      {/* Bottom gradient */}
+      <LinearGradient
+        colors={["rgba(255, 255, 255, 0)", "#ffffff"]}
+        style={[styles.bottomGradient, { height: insets.bottom + 100 }]}
         pointerEvents="none"
       />
     </View>
@@ -206,9 +216,14 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
   },
+  bottomGradient: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+  },
   contentContainer: {
     padding: 16,
-    paddingBottom: 8,
     gap: 12,
   },
   emptyContainer: {
