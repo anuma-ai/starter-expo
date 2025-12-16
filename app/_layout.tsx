@@ -355,9 +355,9 @@ export default function RootLayout() {
         appId={Constants.expoConfig?.extra?.privyAppId}
         clientId={Constants.expoConfig?.extra?.privyClientId}
         config={{
-          embeddedWallets: {
+          embedded: {
             ethereum: {
-              createOnLogin: "off",
+              createOnLogin: "users-without-wallets",
             },
             solana: {
               createOnLogin: "off",
