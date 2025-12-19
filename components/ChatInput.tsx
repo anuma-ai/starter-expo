@@ -15,26 +15,22 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { MenuView } from "@react-native-menu/menu";
 import { useIdentityToken } from "@privy-io/expo";
-import { useChat, useImageGeneration, useModels } from "@reverbia/sdk/expo";
+import {
+  useChatStorage,
+  useImageGeneration,
+  useModels,
+  type StoredMessage,
+} from "@reverbia/sdk/expo";
+import { Database } from "@nozbe/watermelondb";
 import * as ImagePicker from "expo-image-picker";
 import { GlassView } from "expo-glass-effect";
 import { LinearGradient } from "expo-linear-gradient";
 
-type MessageContent =
-  | string
-  | Array<
-      | { type: "text"; text: string }
-      | { type: "image_url"; image_url: { url: string } }
-    >;
-
-interface Message {
-  role: string;
-  content: MessageContent;
-}
-
 interface ChatInputProps {
-  messages: Message[];
-  onMessagesUpdate: (messages: Message[]) => void;
+  database: Database;
+  conversationId: string | null;
+  onConversationChange: (id: string) => void;
+  onMessagesChange: (messages: StoredMessage[]) => void;
   streamingContent: string;
   setStreamingContent: (content: string) => void;
 }
@@ -44,28 +40,6 @@ interface Model {
   name?: string;
   provider?: string;
 }
-
-// Convert our Message format to the API format
-const toApiMessages = (messages: Message[]) => {
-  return messages.map((msg) => {
-    if (typeof msg.content === "string") {
-      return { role: msg.role, content: msg.content };
-    }
-    // For array content (with images), convert to API format
-    return {
-      role: msg.role,
-      content: msg.content.map((part) => {
-        if (part.type === "text") {
-          return { type: "text" as const, text: part.text };
-        }
-        return {
-          type: "image_url" as const,
-          image_url: { url: part.image_url.url },
-        };
-      }),
-    };
-  });
-};
 
 function ModelPickerSheet({
   visible,
@@ -331,8 +305,10 @@ const sheetStyles = StyleSheet.create({
 });
 
 export default function ChatInput({
-  messages,
-  onMessagesUpdate,
+  database,
+  conversationId,
+  onConversationChange,
+  onMessagesChange,
   streamingContent,
   setStreamingContent,
 }: ChatInputProps) {
@@ -344,7 +320,6 @@ export default function ChatInput({
   const [attachedImage, setAttachedImage] = useState<string | null>(null);
   const [showModelPicker, setShowModelPicker] = useState(false);
   const [selectedModel, setSelectedModel] = useState("openai/gpt-4o");
-  const messagesBeforeStreamRef = useRef<Message[]>([]);
   const accumulatedContentRef = useRef("");
 
   // Fetch available models
@@ -353,47 +328,80 @@ export default function ChatInput({
     baseUrl: "https://ai-portal-dev.zetachain.com",
   });
 
-  // Store latest callbacks in refs so useChat callbacks always have fresh references
+  // Store latest callback in ref so useChatStorage callbacks always have fresh references
   const setStreamingContentRef = useRef(setStreamingContent);
-  const onMessagesUpdateRef = useRef(onMessagesUpdate);
+  const onMessagesChangeRef = useRef(onMessagesChange);
 
   useEffect(() => {
     setStreamingContentRef.current = setStreamingContent;
-    onMessagesUpdateRef.current = onMessagesUpdate;
-  }, [setStreamingContent, onMessagesUpdate]);
+    onMessagesChangeRef.current = onMessagesChange;
+  }, [setStreamingContent, onMessagesChange]);
 
-  const { isLoading: isChatLoading, sendMessage } = useChat({
+  // Store conversationId in ref for callbacks
+  const conversationIdRef = useRef(conversationId);
+  useEffect(() => {
+    conversationIdRef.current = conversationId;
+  }, [conversationId]);
+
+  const {
+    isLoading: isChatLoading,
+    sendMessage,
+    conversationId: currentConversationId,
+    setConversationId,
+    getMessages,
+    updateConversationTitle,
+  } = useChatStorage({
+    database,
+    conversationId: conversationId ?? undefined,
     getToken: getIdentityToken,
     baseUrl: "https://ai-portal-dev.zetachain.com",
-    onData: (chunk: any) => {
-      console.log("Streaming chunk:", chunk);
-      // Chunk is the content string directly from this SDK
-      const content =
-        typeof chunk === "string"
-          ? chunk
-          : chunk.choices?.[0]?.delta?.content || "";
-      if (content) {
-        accumulatedContentRef.current += content;
-        setStreamingContentRef.current(accumulatedContentRef.current);
-      }
+    onData: (chunk: string) => {
+      accumulatedContentRef.current += chunk;
+      setStreamingContentRef.current(accumulatedContentRef.current);
     },
-    onFinish: () => {
-      // Move streaming content to messages
-      if (accumulatedContentRef.current) {
-        onMessagesUpdateRef.current([
-          ...messagesBeforeStreamRef.current,
-          { role: "assistant", content: accumulatedContentRef.current },
-        ]);
-      }
+    onFinish: async () => {
       accumulatedContentRef.current = "";
       setStreamingContentRef.current("");
+      // Note: Messages are refreshed in onSubmit after sendMessage completes
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       console.error("Chat error:", error);
       accumulatedContentRef.current = "";
       setStreamingContentRef.current("");
     },
   });
+
+  // Store setConversationId in ref to avoid dependency issues
+  const setConversationIdRef = useRef(setConversationId);
+  useEffect(() => {
+    setConversationIdRef.current = setConversationId;
+  }, [setConversationId]);
+
+  // Track if we're syncing from parent to avoid loops
+  const isSyncingFromParent = useRef(false);
+
+  // Sync conversationId from parent (only when parent initiates the change)
+  useEffect(() => {
+    if (conversationId !== currentConversationId) {
+      isSyncingFromParent.current = true;
+      setConversationIdRef.current(conversationId);
+      // Reset flag after a tick
+      setTimeout(() => {
+        isSyncingFromParent.current = false;
+      }, 0);
+    }
+  }, [conversationId, currentConversationId]);
+
+  // Notify parent when conversation ID changes (only for new conversations created internally)
+  useEffect(() => {
+    if (
+      currentConversationId &&
+      currentConversationId !== conversationId &&
+      !isSyncingFromParent.current
+    ) {
+      onConversationChange(currentConversationId);
+    }
+  }, [currentConversationId, conversationId, onConversationChange]);
 
   const { isLoading: isImageLoading, generateImage } = useImageGeneration({
     getToken: getIdentityToken,
@@ -406,35 +414,12 @@ export default function ChatInput({
     if (!input.trim() || isLoading) return;
 
     const prompt = input.trim();
-
-    // Build user message content - include attached image if present
-    let userContent: MessageContent;
-    if (attachedImage) {
-      userContent = [
-        { type: "text", text: prompt },
-        { type: "image_url", image_url: { url: attachedImage } },
-      ];
-    } else {
-      userContent = prompt;
-    }
-
-    const userMessage = { role: "user", content: userContent };
-    const updatedMessages = [...messages, userMessage];
-
-    onMessagesUpdate(updatedMessages);
     setInput("");
     setAttachedImage(null);
 
     if (imageMode) {
-      // Image generation mode
+      // Image generation mode - TODO: integrate with storage
       setImageMode(false);
-
-      // Add loading placeholder
-      const messagesWithLoading = [
-        ...updatedMessages,
-        { role: "assistant", content: "[[IMAGE_LOADING]]" },
-      ];
-      onMessagesUpdate(messagesWithLoading);
 
       console.log("Generating image with prompt:", prompt);
       const result = await generateImage({
@@ -444,57 +429,65 @@ export default function ChatInput({
       });
       console.log("Image generation result:", JSON.stringify(result, null, 2));
 
-      const imageUrl =
-        (result.data as any)?.images?.[0]?.url ||
-        (result.data as any)?.data?.[0]?.url;
-      if (imageUrl) {
-        console.log("Image URL:", imageUrl);
-        // Replace loading placeholder with actual image
-        onMessagesUpdate([
-          ...updatedMessages,
-          {
-            role: "assistant",
-            content: imageUrl,
-          },
-        ]);
-      } else if (result.error) {
+      if (result.error) {
         console.error("Image generation error:", result.error);
-        // Remove loading placeholder on error
-        onMessagesUpdate(updatedMessages);
-      } else {
-        console.log("No image URL found in result");
-        // Remove loading placeholder if no URL
-        onMessagesUpdate(updatedMessages);
       }
     } else {
-      // Chat mode
-      messagesBeforeStreamRef.current = updatedMessages;
+      // Chat mode - useChatStorage handles message storage automatically
       accumulatedContentRef.current = "";
       setStreamingContent("");
 
-      const result = await sendMessage({
-        messages: toApiMessages(updatedMessages) as any,
-        model: selectedModel,
-      });
+      // Show user message immediately (optimistic update)
+      const existingMessages = currentConversationId
+        ? await getMessages(currentConversationId)
+        : [];
+      onMessagesChange([
+        ...existingMessages,
+        {
+          uniqueId: "temp",
+          messageId: 0,
+          conversationId: "",
+          role: "user",
+          content: prompt,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        } as StoredMessage,
+      ]);
 
-      // Fallback if no streaming happened
-      if (
-        !accumulatedContentRef.current &&
-        result.data?.choices?.[0]?.message
-      ) {
-        const assistantMsg = result.data.choices[0].message;
-        onMessagesUpdate([
-          ...updatedMessages,
-          {
-            role: assistantMsg.role || "assistant",
-            content:
-              typeof assistantMsg.content === "string"
-                ? assistantMsg.content
-                : assistantMsg.content?.[0]?.text || "",
-          },
-        ]);
-      } else if (result.error) {
+      console.log("Sending message:", { prompt, model: selectedModel, conversationId: currentConversationId });
+      const result = await sendMessage({
+        content: prompt,
+        model: selectedModel,
+        includeHistory: true,
+      });
+      console.log("sendMessage result:", result);
+
+      if (result.error) {
         console.error("Chat error:", result.error);
+        // Revert optimistic update on error
+        if (currentConversationId) {
+          const messages = await getMessages(currentConversationId);
+          onMessagesChange(messages);
+        }
+      } else {
+        // Messages are automatically stored, refresh the list
+        // Use the conversation ID from the result in case it was newly created
+        const convId = result.userMessage?.conversationId || currentConversationId;
+        if (convId) {
+          // Set conversation title to first message (truncated)
+          const isNewConversation = !conversationId;
+          if (isNewConversation) {
+            const title = prompt.length > 50 ? prompt.slice(0, 50) + "..." : prompt;
+            await updateConversationTitle(convId, title);
+          }
+
+          const messages = await getMessages(convId);
+          onMessagesChange(messages);
+          // Notify parent of new conversation if it changed
+          if (convId !== conversationId) {
+            onConversationChange(convId);
+          }
+        }
       }
     }
   };

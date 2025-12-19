@@ -1,7 +1,7 @@
 import Constants from "expo-constants";
 import { Stack } from "expo-router";
 import { PrivyProvider, usePrivy } from "@privy-io/expo";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { View, StyleSheet, TouchableOpacity, Dimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -22,16 +22,37 @@ import Animated, {
 } from "react-native-reanimated";
 import ChatInput from "@/components/ChatInput";
 import ChatMessages from "@/components/ChatMessages";
-import ConversationList, { DRAWER_WIDTH } from "@/components/ConversationList";
+import ConversationList, {
+  DRAWER_WIDTH,
+  type Conversation,
+} from "@/components/ConversationList";
+import { database } from "@/utils/database";
+import { useIdentityToken } from "@privy-io/expo";
 import {
-  Conversation,
-  Message,
-  loadConversations,
-  saveConversation,
-  deleteConversation,
-  createNewConversation,
-  generateTitle,
-} from "@/utils/storage";
+  type StoredMessage,
+  type StoredConversation,
+  useChatStorage,
+} from "@reverbia/sdk/expo";
+
+// UI Message type for ChatMessages
+interface Message {
+  role: string;
+  content: string;
+}
+
+// Convert StoredMessage to UI Message format
+const toUIMessage = (msg: StoredMessage): Message => ({
+  role: msg.role,
+  content: msg.content,
+});
+
+// Convert StoredConversation to UI Conversation format
+const toUIConversation = (conv: StoredConversation): Conversation => ({
+  id: conv.conversationId,
+  title: conv.title || "New Chat",
+  createdAt: conv.createdAt.getTime(),
+  updatedAt: conv.updatedAt.getTime(),
+});
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const EDGE_WIDTH = 20; // Width of the edge area that triggers the gesture
@@ -95,12 +116,49 @@ function MenuButton() {
 
 function AppContent() {
   const { user } = usePrivy();
+  const { getIdentityToken } = useIdentityToken();
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [currentConversation, setCurrentConversation] =
-    useState<Conversation | null>(null);
+  const [currentConversationId, setCurrentConversationId] = useState<
+    string | null
+  >(null);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [streamingContent, setStreamingContent] = useState("");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+
+  // Get conversation functions from useChatStorage
+  const { getConversations, getMessages, deleteConversation } = useChatStorage({
+    database,
+    getToken: getIdentityToken,
+    baseUrl: "https://ai-portal-dev.zetachain.com",
+  });
+
+  // Store functions in refs to avoid infinite loops from changing references
+  const getConversationsRef = useRef(getConversations);
+  const getMessagesRef = useRef(getMessages);
+  const deleteConversationRef = useRef(deleteConversation);
+  useEffect(() => {
+    getConversationsRef.current = getConversations;
+    getMessagesRef.current = getMessages;
+    deleteConversationRef.current = deleteConversation;
+  }, [getConversations, getMessages, deleteConversation]);
+
+  // Load conversations from database
+  const loadConversations = useCallback(async () => {
+    try {
+      const storedConversations = await getConversationsRef.current();
+      setConversations(storedConversations.map(toUIConversation));
+    } catch (error) {
+      console.error("Failed to load conversations:", error);
+    }
+  }, []);
+
+  // Load conversations on mount and when user changes
+  useEffect(() => {
+    if (user) {
+      loadConversations();
+    }
+  }, [user, loadConversations]);
 
   // Reanimated shared value for smooth gesture-driven animation
   const translateX = useSharedValue(-DRAWER_WIDTH);
@@ -176,81 +234,63 @@ function AppContent() {
     };
   });
 
-  // Load conversations on mount
+  // Mark as loaded once user is available
   useEffect(() => {
     if (user) {
-      loadConversations().then((loaded) => {
-        // Filter out any empty conversations that might have been saved
-        const nonEmpty = loaded.filter((c) => c.messages.length > 0);
-        setConversations(nonEmpty);
-        if (nonEmpty.length > 0) {
-          setCurrentConversation(nonEmpty[0]);
-        } else {
-          // Create a new empty conversation but don't save it yet
-          setCurrentConversation(createNewConversation());
-        }
-        setIsLoaded(true);
-      });
+      setIsLoaded(true);
     }
   }, [user]);
 
-  const messages = currentConversation?.messages || [];
-
-  const handleMessagesUpdate = useCallback(
-    async (newMessages: Message[]) => {
-      if (!currentConversation) return;
-
-      // Don't save empty conversations
-      if (newMessages.length === 0) return;
-
-      const updatedConversation: Conversation = {
-        ...currentConversation,
-        messages: newMessages,
-        updatedAt: Date.now(),
-        title: generateTitle(newMessages),
-      };
-
-      setCurrentConversation(updatedConversation);
-      await saveConversation(updatedConversation);
-
-      setConversations((prev) => {
-        const filtered = prev.filter((c) => c.id !== updatedConversation.id);
-        return [updatedConversation, ...filtered];
-      });
+  // Handle messages change from ChatInput
+  const handleMessagesChange = useCallback(
+    (storedMessages: StoredMessage[]) => {
+      setMessages(storedMessages.map(toUIMessage));
     },
-    [currentConversation]
+    []
   );
 
-  const handleSelectConversation = (conversation: Conversation) => {
-    setCurrentConversation(conversation);
+  // Handle conversation ID change from ChatInput
+  const handleConversationChange = useCallback((id: string) => {
+    setCurrentConversationId(id);
+    // Refresh conversations list to show newly created conversation
+    loadConversations();
+  }, [loadConversations]);
+
+  const handleSelectConversation = async (conversation: Conversation) => {
+    setCurrentConversationId(conversation.id);
     setStreamingContent("");
     setDrawerOpen(false);
+    // Load messages for selected conversation
+    try {
+      const storedMessages = await getMessagesRef.current(conversation.id);
+      setMessages(storedMessages.map(toUIMessage));
+    } catch (error) {
+      console.error("Failed to load messages:", error);
+      setMessages([]);
+    }
   };
 
   const handleNewConversation = () => {
-    // Create a new conversation but don't save it until it has messages
-    const newConv = createNewConversation();
-    setCurrentConversation(newConv);
+    setCurrentConversationId(null);
+    setMessages([]);
     setStreamingContent("");
     setDrawerOpen(false);
   };
 
-  const handleDeleteConversation = async (id: string) => {
-    await deleteConversation(id);
-    setConversations((prev) => {
-      const filtered = prev.filter((c) => c.id !== id);
-
-      if (currentConversation?.id === id) {
-        if (filtered.length > 0) {
-          setCurrentConversation(filtered[0]);
-        } else {
-          // Create new empty conversation but don't save it
-          setCurrentConversation(createNewConversation());
-        }
+  const handleDeleteConversation = async (conversation: Conversation) => {
+    try {
+      await deleteConversationRef.current(conversation.id);
+      // If we're deleting the current conversation, clear it
+      if (currentConversationId === conversation.id) {
+        setCurrentConversationId(null);
+        setMessages([]);
+        setStreamingContent("");
       }
-
-      return filtered;
-    });
+      // Refresh the conversation list
+      loadConversations();
+    } catch (error) {
+      console.error("Failed to delete conversation:", error);
+    }
   };
 
   const displayMessages = streamingContent
@@ -274,9 +314,10 @@ function AppContent() {
           {/* Drawer */}
           <ConversationList
             conversations={conversations}
-            currentConversationId={currentConversation?.id || null}
+            currentConversationId={currentConversationId}
             onSelectConversation={handleSelectConversation}
             onNewConversation={handleNewConversation}
+            onDeleteConversation={handleDeleteConversation}
           />
 
           {/* Main Content */}
@@ -285,8 +326,10 @@ function AppContent() {
             <ConversationButton onPress={() => setDrawerOpen(!drawerOpen)} />
             <MenuButton />
             <ChatInput
-              messages={messages}
-              onMessagesUpdate={handleMessagesUpdate}
+              database={database}
+              conversationId={currentConversationId}
+              onConversationChange={handleConversationChange}
+              onMessagesChange={handleMessagesChange}
               streamingContent={streamingContent}
               setStreamingContent={setStreamingContent}
             />

@@ -11,13 +11,21 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { GlassView } from "expo-glass-effect";
-import { Conversation } from "@/utils/storage";
+import { MenuView } from "@react-native-menu/menu";
+
+export interface Conversation {
+  id: string;
+  title: string;
+  createdAt: number;
+  updatedAt: number;
+}
 
 interface ConversationListProps {
   conversations: Conversation[];
   currentConversationId: string | null;
   onSelectConversation: (conversation: Conversation) => void;
   onNewConversation: () => void;
+  onDeleteConversation: (conversation: Conversation) => void;
 }
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -47,6 +55,7 @@ export default function ConversationList({
   currentConversationId,
   onSelectConversation,
   onNewConversation,
+  onDeleteConversation,
 }: ConversationListProps) {
   const insets = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState("");
@@ -118,32 +127,49 @@ export default function ConversationList({
           </View>
         ) : (
           filteredConversations.map((conversation) => (
-            <TouchableOpacity
+            <MenuView
               key={conversation.id}
-              style={[
-                styles.conversationItem,
-                conversation.id === currentConversationId &&
-                  styles.conversationItemActive,
+              onPressAction={({ nativeEvent }) => {
+                if (nativeEvent.event === "delete") {
+                  onDeleteConversation(conversation);
+                }
+              }}
+              actions={[
+                {
+                  id: "delete",
+                  title: "Delete",
+                  attributes: { destructive: true },
+                  image: "trash",
+                  imageColor: "red",
+                },
               ]}
-              onPress={() => onSelectConversation(conversation)}
-              activeOpacity={0.7}
             >
-              <View style={styles.conversationContent}>
-                <Text
-                  style={[
-                    styles.conversationTitle,
-                    conversation.id === currentConversationId &&
-                      styles.conversationTitleActive,
-                  ]}
-                  numberOfLines={1}
-                >
-                  {conversation.title}
-                </Text>
-                <Text style={styles.conversationDate}>
-                  {formatDate(conversation.updatedAt)}
-                </Text>
-              </View>
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.conversationItem,
+                  conversation.id === currentConversationId &&
+                    styles.conversationItemActive,
+                ]}
+                onPress={() => onSelectConversation(conversation)}
+                activeOpacity={0.7}
+              >
+                <View style={styles.conversationContent}>
+                  <Text
+                    style={[
+                      styles.conversationTitle,
+                      conversation.id === currentConversationId &&
+                        styles.conversationTitleActive,
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {conversation.title}
+                  </Text>
+                  <Text style={styles.conversationDate}>
+                    {formatDate(conversation.updatedAt)}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            </MenuView>
           ))
         )}
       </ScrollView>

@@ -12,6 +12,8 @@
     "@ethersproject/shims": "^5.8.0",
     "@expo-google-fonts/inter": "^0.3.0",
     "@expo/vector-icons": "^14.1.0",
+    "@nozbe/simdjson": "^3.9.4",
+    "@nozbe/watermelondb": "^0.28.0",
     "@privy-io/expo": "^0.58.6",
     "@privy-io/expo-native-extensions": "^0.0.5",
     "@react-native-async-storage/async-storage": "^2.2.0",
@@ -67,7 +69,8 @@
   "private": true,
   "pnpm": {
     "overrides": {
-      "viem": "2.32.0"
+      "viem": "2.32.0",
+      "@reverbia/sdk": "link:../../../Library/pnpm/global/5/node_modules/@reverbia/sdk"
     }
   }
 }
