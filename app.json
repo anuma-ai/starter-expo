@@ -34,8 +34,8 @@
       "package": "dev.privy.example"
     },
     "extra": {
-      "privyAppId": "cmhwlx82v000xle0cde4rjy5y",
-      "privyClientId": "client-WY6SXGPztSeruyfqrZxaTtCr1QwNiSirc2Huj48Eav8SM",
+      "privyAppId": "cmjkga3y002g0ju0clwca9wwp",
+      "privyClientId": "client-WY6UFSz2G9sKJj4C2dm8irZomkbg9twZbFs1ez8r4yvrD",
       "passkeyAssociatedDomain": "https://<your-associated-domain>",
       "router": {},
       "eas": {
