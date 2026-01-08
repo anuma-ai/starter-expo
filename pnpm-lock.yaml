@@ -6,7 +6,6 @@ settings:
 
 overrides:
   viem: 2.32.0
-  '@reverbia/sdk': link:../../../Library/pnpm/global/5/node_modules/@reverbia/sdk
 
 importers:
 
@@ -43,8 +42,8 @@ importers:
         specifier: ^7.1.6
         version: 7.1.24(react-native@0.79.2(@babel/core@7.28.5)(@types/react@19.0.14)(bufferutil@4.0.9)(react@19.0.0)(utf-8-validate@5.0.10))(react@19.0.0)
       '@reverbia/sdk':
-        specifier: 1.0.0-next.20260105233138
-        version: 1.0.0-next.20260105233138(@nozbe/watermelondb@0.28.0)(react-dom@19.0.0(react@19.0.0))(react-native@0.79.2(@babel/core@7.28.5)(@types/react@19.0.14)(bufferutil@4.0.9)(react@19.0.0)(utf-8-validate@5.0.10))(react@19.0.0)(zod@3.25.76)
+        specifier: 1.0.0-next.20260108185013
+        version: 1.0.0-next.20260108185013(@nozbe/watermelondb@0.28.0)(react-dom@19.0.0(react@19.0.0))(react-native@0.79.2(@babel/core@7.28.5)(@types/react@19.0.14)(bufferutil@4.0.9)(react@19.0.0)(utf-8-validate@5.0.10))(react@19.0.0)(zod@3.25.76)
       '@solana/web3.js':
         specifier: ^1.98.4
         version: 1.98.4(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)
@@ -1321,11 +1320,11 @@ packages:
   '@react-navigation/routers@7.5.2':
     resolution: {integrity: sha512-kymreY5aeTz843E+iPAukrsOtc7nabAH6novtAPREmmGu77dQpfxPB2ZWpKb5nRErIRowp1kYRoN2Ckl+S6JYw==}
 
-  '@reverbia/portal@1.0.0-next.20251226114748':
-    resolution: {integrity: sha512-crVm/vGHdpPbOxxsLnPAxSE10As+8MjjOfogjv8U4UZCdlzMSLvf4UismBwWlHbPuSiWK4+iELz8kgeFl5aYKw==}
+  '@reverbia/portal@1.0.0-next.20260106133301':
+    resolution: {integrity: sha512-QkBL/P8ErGAWu1ukx8FM/kE1Og9yBXMvF3XxFgcwfeDvCQF+JLMw5jAe+UaN1ka4yL9ocZ0211avbIbbFCk5Yw==}
 
-  '@reverbia/sdk@1.0.0-next.20260105233138':
-    resolution: {integrity: sha512-dsRiYkJApWYATeoeaUJZZpFyZulY8iFunuHSftvGCAo1qmyDaTqEki0uIXVAdkvzWHj6vIiYVC28Wr+425VMHA==}
+  '@reverbia/sdk@1.0.0-next.20260108185013':
+    resolution: {integrity: sha512-cx0Z9qkcylSp/BG4QRIwrS3+UZMRcpJUGNbhqSTbv4C6Ax778psE2iCsPxZbXH0AdLHVcLRMsg4kqDiA2OIuuw==}
     peerDependencies:
       '@nozbe/watermelondb': ^0.28.0
       '@privy-io/react-auth': ^3.7.0
@@ -6398,11 +6397,11 @@ snapshots:
     dependencies:
       nanoid: 3.3.11
 
-  '@reverbia/portal@1.0.0-next.20251226114748': {}
+  '@reverbia/portal@1.0.0-next.20260106133301': {}
 
-  '@reverbia/sdk@1.0.0-next.20260105233138(@nozbe/watermelondb@0.28.0)(react-dom@19.0.0(react@19.0.0))(react-native@0.79.2(@babel/core@7.28.5)(@types/react@19.0.14)(bufferutil@4.0.9)(react@19.0.0)(utf-8-validate@5.0.10))(react@19.0.0)(zod@3.25.76)':
+  '@reverbia/sdk@1.0.0-next.20260108185013(@nozbe/watermelondb@0.28.0)(react-dom@19.0.0(react@19.0.0))(react-native@0.79.2(@babel/core@7.28.5)(@types/react@19.0.14)(bufferutil@4.0.9)(react@19.0.0)(utf-8-validate@5.0.10))(react@19.0.0)(zod@3.25.76)':
     dependencies:
-      '@reverbia/portal': 1.0.0-next.20251226114748
+      '@reverbia/portal': 1.0.0-next.20260106133301
       ai: 5.0.93(zod@3.25.76)
       pdfjs-dist: 4.10.38
       react: 19.0.0

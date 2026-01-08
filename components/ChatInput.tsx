@@ -437,6 +437,9 @@ export default function ChatInput({
       accumulatedContentRef.current = "";
       setStreamingContent("");
 
+      // Extract mime type from data URI (format: data:image/jpeg;base64,...)
+      const mimeType = attachedImage?.match(/^data:([^;]+);/)?.[1] || "image/jpeg";
+
       // Show user message immediately (optimistic update)
       const existingMessages = currentConversationId
         ? await getMessages(currentConversationId)
@@ -449,16 +452,21 @@ export default function ChatInput({
           conversationId: "",
           role: "user",
           content: prompt,
+          files: attachedImage
+            ? [{ id: "temp", name: "image", type: mimeType, size: 0, url: attachedImage }]
+            : undefined,
           createdAt: new Date(),
           updatedAt: new Date(),
         } as StoredMessage,
       ]);
-
-      console.log("Sending message:", { prompt, model: selectedModel, conversationId: currentConversationId });
+      console.log("Sending message:", { prompt, model: selectedModel, conversationId: currentConversationId, hasAttachment: !!attachedImage });
       const result = await sendMessage({
         content: prompt,
         model: selectedModel,
         includeHistory: true,
+        files: attachedImage
+          ? [{ id: Date.now().toString(), name: "image", type: mimeType, size: 0, url: attachedImage }]
+          : undefined,
       });
       console.log("sendMessage result:", result);
 

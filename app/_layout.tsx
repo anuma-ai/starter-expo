@@ -34,17 +34,39 @@ import {
   useChatStorage,
 } from "@reverbia/sdk/expo";
 
-// UI Message type for ChatMessages
+// UI Message type for ChatMessages (matches ChatMessages MessageContent type)
+type MessageContent =
+  | string
+  | Array<
+      | { type: "text"; text: string }
+      | { type: "image_url"; image_url: { url: string } }
+    >;
+
 interface Message {
   role: string;
-  content: string;
+  content: MessageContent;
 }
 
 // Convert StoredMessage to UI Message format
-const toUIMessage = (msg: StoredMessage): Message => ({
-  role: msg.role,
-  content: msg.content,
-});
+const toUIMessage = (msg: StoredMessage): Message => {
+  // Check if message has files with URLs
+  const imageFiles = msg.files?.filter((f) => f.url) || [];
+
+  if (imageFiles.length === 0) {
+    return { role: msg.role, content: msg.content };
+  }
+
+  // Build content array with text and images
+  const contentArray: MessageContent = [
+    { type: "text", text: msg.content },
+    ...imageFiles.map((f) => ({
+      type: "image_url" as const,
+      image_url: { url: f.url! },
+    })),
+  ];
+
+  return { role: msg.role, content: contentArray };
+};
 
 // Convert StoredConversation to UI Conversation format
 const toUIConversation = (conv: StoredConversation): Conversation => ({

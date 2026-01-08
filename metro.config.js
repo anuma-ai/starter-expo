@@ -62,6 +62,13 @@ const resolveRequestWithPackageExports = (context, moduleName, platform) => {
   }
 
   // Handle @reverbia/sdk subpath exports
+  if (moduleName === "@reverbia/sdk/expo") {
+    return {
+      filePath: path.resolve(aiSdkPath, "dist/expo/index.mjs"),
+      type: "sourceFile",
+    };
+  }
+
   if (moduleName === "@reverbia/sdk/react/native") {
     return {
       filePath: path.resolve(aiSdkPath, "dist/react/native/native.mjs"),
