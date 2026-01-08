@@ -440,6 +440,11 @@ export default function ChatInput({
       // Extract mime type from data URI (format: data:image/jpeg;base64,...)
       const mimeType = attachedImage?.match(/^data:([^;]+);/)?.[1] || "image/jpeg";
 
+      // Store the attached file info for later merging (since DB strips data URIs)
+      const optimisticFiles = attachedImage
+        ? [{ id: "temp", name: "image", type: mimeType, size: 0, url: attachedImage }]
+        : undefined;
+
       // Show user message immediately (optimistic update)
       const existingMessages = currentConversationId
         ? await getMessages(currentConversationId)
@@ -452,9 +457,7 @@ export default function ChatInput({
           conversationId: "",
           role: "user",
           content: prompt,
-          files: attachedImage
-            ? [{ id: "temp", name: "image", type: mimeType, size: 0, url: attachedImage }]
-            : undefined,
+          files: optimisticFiles,
           createdAt: new Date(),
           updatedAt: new Date(),
         } as StoredMessage,
@@ -478,7 +481,7 @@ export default function ChatInput({
           onMessagesChange(messages);
         }
       } else {
-        // Messages are automatically stored, refresh the list
+        // Messages are automatically stored
         // Use the conversation ID from the result in case it was newly created
         const convId = result.userMessage?.conversationId || currentConversationId;
         if (convId) {
@@ -489,8 +492,24 @@ export default function ChatInput({
             await updateConversationTitle(convId, title);
           }
 
-          const messages = await getMessages(convId);
-          onMessagesChange(messages);
+          // Instead of reloading from DB (which strips data URIs),
+          // merge stored messages with preserved file URLs from optimistic update
+          const storedMessages = await getMessages(convId);
+
+          // Merge: preserve file URLs for user messages that had attachments
+          const mergedMessages = storedMessages.map((msg: StoredMessage) => {
+            // If this is the user message we just sent and it had files
+            if (msg.role === "user" && msg.content === prompt && optimisticFiles) {
+              // Check if stored message has files without URLs (stripped data URIs)
+              if (!msg.files || msg.files.every((f) => !f.url)) {
+                return { ...msg, files: optimisticFiles };
+              }
+            }
+            return msg;
+          });
+
+          onMessagesChange(mergedMessages);
+
           // Notify parent of new conversation if it changed
           if (convId !== conversationId) {
             onConversationChange(convId);
