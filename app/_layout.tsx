@@ -152,7 +152,7 @@ function AppContent() {
   const { getConversations, getMessages, deleteConversation } = useChatStorage({
     database,
     getToken: getIdentityToken,
-    baseUrl: "https://ai-portal-dev.zetachain.com",
+    baseUrl: "https://portal.anuma-dev.ai",
   });
 
   // Store functions in refs to avoid infinite loops from changing references

@@ -1,13 +1,14 @@
 import { Database } from "@nozbe/watermelondb";
 import SQLiteAdapter from "@nozbe/watermelondb/adapters/sqlite";
 import {
-  chatStorageSchema,
-  ChatMessage,
-  ChatConversation,
+  sdkSchema,
+  sdkMigrations,
+  sdkModelClasses,
 } from "@anuma/sdk/expo";
 
 const adapter = new SQLiteAdapter({
-  schema: chatStorageSchema,
+  schema: sdkSchema,
+  migrations: sdkMigrations,
   dbName: "anuma_chat",
   jsi: true,
   onSetUpError: (error) => {
@@ -17,5 +18,5 @@ const adapter = new SQLiteAdapter({
 
 export const database = new Database({
   adapter,
-  modelClasses: [ChatMessage, ChatConversation],
+  modelClasses: sdkModelClasses,
 });

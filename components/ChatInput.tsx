@@ -17,7 +17,6 @@ import { MenuView } from "@react-native-menu/menu";
 import { useIdentityToken } from "@privy-io/expo";
 import {
   useChatStorage,
-  useImageGeneration,
   useModels,
   type StoredMessage,
 } from "@anuma/sdk/expo";
@@ -316,7 +315,6 @@ export default function ChatInput({
   const { getIdentityToken } = useIdentityToken();
   const [input, setInput] = useState("");
   const [lineCount, setLineCount] = useState(1);
-  const [imageMode, setImageMode] = useState(false);
   const [attachedImage, setAttachedImage] = useState<string | null>(null);
   const [showModelPicker, setShowModelPicker] = useState(false);
   const [selectedModel, setSelectedModel] = useState("openai/gpt-4o");
@@ -325,7 +323,7 @@ export default function ChatInput({
   // Fetch available models
   const { models, isLoading: isLoadingModels } = useModels({
     getToken: getIdentityToken,
-    baseUrl: "https://ai-portal-dev.zetachain.com",
+    baseUrl: "https://portal.anuma-dev.ai",
   });
 
   // Store latest callback in ref so useChatStorage callbacks always have fresh references
@@ -354,7 +352,7 @@ export default function ChatInput({
     database,
     conversationId: conversationId ?? undefined,
     getToken: getIdentityToken,
-    baseUrl: "https://ai-portal-dev.zetachain.com",
+    baseUrl: "https://portal.anuma-dev.ai",
     onData: (chunk: string) => {
       accumulatedContentRef.current += chunk;
       setStreamingContentRef.current(accumulatedContentRef.current);
@@ -403,12 +401,7 @@ export default function ChatInput({
     }
   }, [currentConversationId, conversationId, onConversationChange]);
 
-  const { isLoading: isImageLoading, generateImage } = useImageGeneration({
-    getToken: getIdentityToken,
-    baseUrl: "https://ai-portal-dev.zetachain.com",
-  });
-
-  const isLoading = isChatLoading || isImageLoading;
+  const isLoading = isChatLoading;
 
   const onSubmit = async () => {
     if (!input.trim() || isLoading) return;
@@ -417,103 +410,86 @@ export default function ChatInput({
     setInput("");
     setAttachedImage(null);
 
-    if (imageMode) {
-      // Image generation mode - TODO: integrate with storage
-      setImageMode(false);
+    accumulatedContentRef.current = "";
+    setStreamingContent("");
 
-      console.log("Generating image with prompt:", prompt);
-      const result = await generateImage({
-        prompt,
-        model: "openai-dall-e-3",
-        response_format: "url",
-      });
-      console.log("Image generation result:", JSON.stringify(result, null, 2));
+    // Extract mime type from data URI (format: data:image/jpeg;base64,...)
+    const mimeType = attachedImage?.match(/^data:([^;]+);/)?.[1] || "image/jpeg";
 
-      if (result.error) {
-        console.error("Image generation error:", result.error);
+    // Store the attached file info for later merging (since DB strips data URIs)
+    const optimisticFiles = attachedImage
+      ? [{ id: "temp", name: "image", type: mimeType, size: 0, url: attachedImage }]
+      : undefined;
+
+    // Show user message immediately (optimistic update)
+    const existingMessages = currentConversationId
+      ? await getMessages(currentConversationId)
+      : [];
+    onMessagesChange([
+      ...existingMessages,
+      {
+        uniqueId: "temp",
+        messageId: 0,
+        conversationId: "",
+        role: "user",
+        content: prompt,
+        files: optimisticFiles,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      } as StoredMessage,
+    ]);
+    const userContent: Array<{ type: "text"; text: string } | { type: "image_url"; image_url: { url: string } }> = [
+      { type: "text", text: prompt },
+    ];
+    if (attachedImage) {
+      userContent.push({ type: "image_url", image_url: { url: attachedImage } });
+    }
+    const result = await sendMessage({
+      messages: [{ role: "user", content: userContent }],
+      model: selectedModel,
+      includeHistory: true,
+    });
+
+    if (result.error) {
+      console.error("Chat error:", result.error);
+      // Revert optimistic update on error
+      if (currentConversationId) {
+        const messages = await getMessages(currentConversationId);
+        onMessagesChange(messages);
       }
     } else {
-      // Chat mode - useChatStorage handles message storage automatically
-      accumulatedContentRef.current = "";
-      setStreamingContent("");
-
-      // Extract mime type from data URI (format: data:image/jpeg;base64,...)
-      const mimeType = attachedImage?.match(/^data:([^;]+);/)?.[1] || "image/jpeg";
-
-      // Store the attached file info for later merging (since DB strips data URIs)
-      const optimisticFiles = attachedImage
-        ? [{ id: "temp", name: "image", type: mimeType, size: 0, url: attachedImage }]
-        : undefined;
-
-      // Show user message immediately (optimistic update)
-      const existingMessages = currentConversationId
-        ? await getMessages(currentConversationId)
-        : [];
-      onMessagesChange([
-        ...existingMessages,
-        {
-          uniqueId: "temp",
-          messageId: 0,
-          conversationId: "",
-          role: "user",
-          content: prompt,
-          files: optimisticFiles,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        } as StoredMessage,
-      ]);
-      console.log("Sending message:", { prompt, model: selectedModel, conversationId: currentConversationId, hasAttachment: !!attachedImage });
-      const result = await sendMessage({
-        content: prompt,
-        model: selectedModel,
-        includeHistory: true,
-        files: attachedImage
-          ? [{ id: Date.now().toString(), name: "image", type: mimeType, size: 0, url: attachedImage }]
-          : undefined,
-      });
-      console.log("sendMessage result:", result);
-
-      if (result.error) {
-        console.error("Chat error:", result.error);
-        // Revert optimistic update on error
-        if (currentConversationId) {
-          const messages = await getMessages(currentConversationId);
-          onMessagesChange(messages);
+      // Messages are automatically stored
+      // Use the conversation ID from the result in case it was newly created
+      const convId = result.userMessage?.conversationId || currentConversationId;
+      if (convId) {
+        // Set conversation title to first message (truncated)
+        const isNewConversation = !conversationId;
+        if (isNewConversation) {
+          const title = prompt.length > 50 ? prompt.slice(0, 50) + "..." : prompt;
+          await updateConversationTitle(convId, title);
         }
-      } else {
-        // Messages are automatically stored
-        // Use the conversation ID from the result in case it was newly created
-        const convId = result.userMessage?.conversationId || currentConversationId;
-        if (convId) {
-          // Set conversation title to first message (truncated)
-          const isNewConversation = !conversationId;
-          if (isNewConversation) {
-            const title = prompt.length > 50 ? prompt.slice(0, 50) + "..." : prompt;
-            await updateConversationTitle(convId, title);
-          }
 
-          // Instead of reloading from DB (which strips data URIs),
-          // merge stored messages with preserved file URLs from optimistic update
-          const storedMessages = await getMessages(convId);
+        // Instead of reloading from DB (which strips data URIs),
+        // merge stored messages with preserved file URLs from optimistic update
+        const storedMessages = await getMessages(convId);
 
-          // Merge: preserve file URLs for user messages that had attachments
-          const mergedMessages = storedMessages.map((msg: StoredMessage) => {
-            // If this is the user message we just sent and it had files
-            if (msg.role === "user" && msg.content === prompt && optimisticFiles) {
-              // Check if stored message has files without URLs (stripped data URIs)
-              if (!msg.files || msg.files.every((f) => !f.url)) {
-                return { ...msg, files: optimisticFiles };
-              }
+        // Merge: preserve file URLs for user messages that had attachments
+        const mergedMessages = storedMessages.map((msg: StoredMessage) => {
+          // If this is the user message we just sent and it had files
+          if (msg.role === "user" && msg.content === prompt && optimisticFiles) {
+            // Check if stored message has files without URLs (stripped data URIs)
+            if (!msg.files || msg.files.every((f) => !f.url)) {
+              return { ...msg, files: optimisticFiles };
             }
-            return msg;
-          });
-
-          onMessagesChange(mergedMessages);
-
-          // Notify parent of new conversation if it changed
-          if (convId !== conversationId) {
-            onConversationChange(convId);
           }
+          return msg;
+        });
+
+        onMessagesChange(mergedMessages);
+
+        // Notify parent of new conversation if it changed
+        if (convId !== conversationId) {
+          onConversationChange(convId);
         }
       }
     }
@@ -536,9 +512,7 @@ export default function ChatInput({
   };
 
   const handleMenuAction = (event: string) => {
-    if (event === "generate-image") {
-      setImageMode(!imageMode);
-    } else if (event === "attach-image") {
+    if (event === "attach-image") {
       pickImage();
     } else if (event === "choose-model") {
       setShowModelPicker(true);
@@ -578,13 +552,6 @@ export default function ChatInput({
             }
             actions={[
               {
-                id: "generate-image",
-                title: "Generate image",
-                image: "photo.fill",
-                imageColor: "#3C3C43",
-                state: imageMode ? "on" : "off",
-              },
-              {
                 id: "choose-model",
                 title: `Model: ${selectedModelDisplay}`,
                 image: "cpu",
@@ -598,15 +565,8 @@ export default function ChatInput({
               },
             ]}
           >
-            <GlassView
-              style={[styles.plusButton, imageMode && styles.plusButtonActive]}
-              isInteractive
-            >
-              <Ionicons
-                name={imageMode ? "image" : "add"}
-                size={24}
-                color="#3C3C43"
-              />
+            <GlassView style={styles.plusButton} isInteractive>
+              <Ionicons name="add" size={24} color="#3C3C43" />
             </GlassView>
           </MenuView>
 
@@ -624,9 +584,7 @@ export default function ChatInput({
                 setInput(text);
                 setLineCount((text.match(/\n/g) || []).length + 1);
               }}
-              placeholder={
-                imageMode ? "Describe the image..." : "Ask anything..."
-              }
+              placeholder="Ask anything..."
               placeholderTextColor="#8E8E93"
               multiline
               maxLength={2000}
