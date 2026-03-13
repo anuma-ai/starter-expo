@@ -6,8 +6,7 @@ export default function LoginScreen() {
   const [error, setError] = useState("");
   const oauth = useLoginWithOAuth({
     onError: (err) => {
-      console.log(err);
-      setError(JSON.stringify(err.message));
+      setError(err.message || "Login failed");
     },
   });
 
