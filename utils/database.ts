@@ -6,6 +6,7 @@ import {
   sdkModelClasses,
 } from "@anuma/sdk/expo";
 
+// #region database
 const adapter = new SQLiteAdapter({
   schema: sdkSchema,
   migrations: sdkMigrations,
@@ -20,3 +21,4 @@ export const database = new Database({
   adapter,
   modelClasses: sdkModelClasses,
 });
+// #endregion database

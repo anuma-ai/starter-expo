@@ -106,6 +106,7 @@ export default function ChatInput({
       ? [{ id: "temp", name: "image", type: mimeType, size: 0, url: attachedImage }]
       : undefined;
 
+    // #region optimisticUpdate
     // Optimistic update: show the user's message in the UI immediately rather
     // than waiting for the API round-trip. On error we revert to the DB state.
     // After success we merge stored messages with the optimistic file URLs,
@@ -126,18 +127,25 @@ export default function ChatInput({
         updatedAt: new Date(),
       } as StoredMessage,
     ]);
+    // #endregion optimisticUpdate
+
+    // #region contentParts
     const userContent: Array<{ type: "text"; text: string } | { type: "image_url"; image_url: { url: string } }> = [
       { type: "text", text: prompt },
     ];
     if (attachedImage) {
       userContent.push({ type: "image_url", image_url: { url: attachedImage } });
     }
+    // #endregion contentParts
+
+    // #region sendCall
     const result = await sendMessage({
       messages: [{ role: "user", content: userContent }],
       model: selectedModel,
       includeHistory: true,
       serverTools: [],
     });
+    // #endregion sendCall
 
     if (result.error) {
       // Revert optimistic update on error
@@ -150,13 +158,16 @@ export default function ChatInput({
       // Use the conversation ID from the result in case it was newly created
       const convId = result.userMessage?.conversationId || currentConversationId;
       if (convId) {
+        // #region titleGeneration
         // Set conversation title to first message (truncated)
         const isNewConversation = !conversationId;
         if (isNewConversation) {
           const title = prompt.length > 50 ? prompt.slice(0, 50) + "..." : prompt;
           await updateConversationTitle(convId, title);
         }
+        // #endregion titleGeneration
 
+        // #region postStreamMerge
         // Instead of reloading from DB (which strips data URIs),
         // merge stored messages with preserved file URLs from optimistic update
         const storedMessages = await getMessages(convId);
@@ -174,6 +185,7 @@ export default function ChatInput({
         });
 
         onMessagesChange(mergedMessages);
+        // #endregion postStreamMerge
 
         // Notify parent of new conversation if it changed
         if (convId !== conversationId) {

@@ -6,9 +6,11 @@
     "start": "expo start --dev-client",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "generate": "node scripts/generate-docs.mjs"
   },
   "dependencies": {
+    "@anuma/sdk": "1.0.0-next.20260313144326",
     "@ethersproject/shims": "^5.8.0",
     "@expo-google-fonts/inter": "^0.3.0",
     "@expo/vector-icons": "^14.1.0",
@@ -17,7 +19,6 @@
     "@privy-io/expo": "^0.58.6",
     "@privy-io/expo-native-extensions": "^0.0.5",
     "@react-native-menu/menu": "^2.0.0",
-    "@anuma/sdk": "link:../sdk",
     "@solana/web3.js": "^1.98.4",
     "buffer": "^6.0.3",
     "expo": "~53.0.9",

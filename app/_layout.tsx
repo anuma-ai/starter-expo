@@ -43,6 +43,7 @@ interface Message {
   content: MessageContent;
 }
 
+// #region toUIMessage
 // Convert StoredMessage to UI Message format
 const toUIMessage = (msg: StoredMessage): Message => {
   // Check if message has files with URLs
@@ -63,7 +64,9 @@ const toUIMessage = (msg: StoredMessage): Message => {
 
   return { role: msg.role, content: contentArray };
 };
+// #endregion toUIMessage
 
+// #region toUIConversation
 // Convert StoredConversation to UI Conversation format
 const toUIConversation = (conv: StoredConversation): Conversation => ({
   id: conv.conversationId,
@@ -71,6 +74,7 @@ const toUIConversation = (conv: StoredConversation): Conversation => ({
   createdAt: conv.createdAt.getTime(),
   updatedAt: conv.updatedAt.getTime(),
 });
+// #endregion toUIConversation
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const EDGE_WIDTH = 20; // Width of the edge area that triggers the gesture
@@ -271,6 +275,7 @@ function AppContent() {
     loadConversations();
   }, [loadConversations]);
 
+  // #region switchConversation
   const handleSelectConversation = async (conversation: Conversation) => {
     setCurrentConversationId(conversation.id);
     setStreamingContent("");
@@ -284,14 +289,18 @@ function AppContent() {
       setMessages([]);
     }
   };
+  // #endregion switchConversation
 
+  // #region newConversation
   const handleNewConversation = () => {
     setCurrentConversationId(null);
     setMessages([]);
     setStreamingContent("");
     setDrawerOpen(false);
   };
+  // #endregion newConversation
 
+  // #region deleteConversation
   const handleDeleteConversation = async (conversation: Conversation) => {
     try {
       await deleteConversationRef.current(conversation.id);
@@ -307,10 +316,13 @@ function AppContent() {
       console.error("Failed to delete conversation:", error);
     }
   };
+  // #endregion deleteConversation
 
+  // #region streamingDisplay
   const displayMessages = streamingContent
     ? [...messages, { role: "assistant", content: streamingContent }]
     : messages;
+  // #endregion streamingDisplay
 
   if (!user || !isLoaded) {
     return (
@@ -405,6 +417,7 @@ const styles = StyleSheet.create({
   },
 });
 
+// #region authProvider
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -429,3 +442,4 @@ export default function RootLayout() {
     </GestureHandlerRootView>
   );
 }
+// #endregion authProvider
