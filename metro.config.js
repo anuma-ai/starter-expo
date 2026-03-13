@@ -22,7 +22,7 @@ config.resolver.unstable_enablePackageExports = true;
 config.resolver.extraNodeModules = {
   react: path.resolve(projectRoot, "node_modules/react"),
   "react-native": path.resolve(projectRoot, "node_modules/react-native"),
-  "react-dom": path.resolve(projectRoot, "node_modules/react-native"),
+  "react-dom": path.resolve(projectRoot, "node_modules/react-dom"),
 };
 
 const resolveRequestWithPackageExports = (context, moduleName, platform) => {
