@@ -26,13 +26,8 @@ import ConversationList, {
   DRAWER_WIDTH,
   type Conversation,
 } from "@/components/ConversationList";
-import { database } from "@/utils/database";
-import { useIdentityToken } from "@privy-io/expo";
-import {
-  type StoredMessage,
-  type StoredConversation,
-  useChatStorage,
-} from "@anuma/sdk/expo";
+import { type StoredMessage, type StoredConversation } from "@anuma/sdk/expo";
+import { useChatStorageSetup } from "@/hooks/useChatStorageSetup";
 
 // UI Message type for ChatMessages (matches ChatMessages MessageContent type)
 type MessageContent =
@@ -138,7 +133,6 @@ function MenuButton() {
 
 function AppContent() {
   const { user } = usePrivy();
-  const { getIdentityToken } = useIdentityToken();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [currentConversationId, setCurrentConversationId] = useState<
     string | null
@@ -148,12 +142,8 @@ function AppContent() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Get conversation functions from useChatStorage
-  const { getConversations, getMessages, deleteConversation } = useChatStorage({
-    database,
-    getToken: getIdentityToken,
-    baseUrl: "https://portal.anuma-dev.ai",
-  });
+  const { getConversations, getMessages, deleteConversation } =
+    useChatStorageSetup();
 
   // Store functions in refs to avoid infinite loops from changing references
   const getConversationsRef = useRef(getConversations);
@@ -348,7 +338,6 @@ function AppContent() {
             <ConversationButton onPress={() => setDrawerOpen(!drawerOpen)} />
             <MenuButton />
             <ChatInput
-              database={database}
               conversationId={currentConversationId}
               onConversationChange={handleConversationChange}
               onMessagesChange={handleMessagesChange}

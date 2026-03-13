@@ -14,19 +14,13 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { MenuView } from "@react-native-menu/menu";
-import { useIdentityToken } from "@privy-io/expo";
-import {
-  useChatStorage,
-  useModels,
-  type StoredMessage,
-} from "@anuma/sdk/expo";
-import { Database } from "@nozbe/watermelondb";
+import { type StoredMessage } from "@anuma/sdk/expo";
+import { useChatStorageSetup } from "@/hooks/useChatStorageSetup";
 import * as ImagePicker from "expo-image-picker";
 import { GlassView } from "expo-glass-effect";
 import { LinearGradient } from "expo-linear-gradient";
 
 interface ChatInputProps {
-  database: Database;
   conversationId: string | null;
   onConversationChange: (id: string) => void;
   onMessagesChange: (messages: StoredMessage[]) => void;
@@ -304,7 +298,6 @@ const sheetStyles = StyleSheet.create({
 });
 
 export default function ChatInput({
-  database,
   conversationId,
   onConversationChange,
   onMessagesChange,
@@ -312,34 +305,11 @@ export default function ChatInput({
   setStreamingContent,
 }: ChatInputProps) {
   const insets = useSafeAreaInsets();
-  const { getIdentityToken } = useIdentityToken();
   const [input, setInput] = useState("");
   const [lineCount, setLineCount] = useState(1);
   const [attachedImage, setAttachedImage] = useState<string | null>(null);
   const [showModelPicker, setShowModelPicker] = useState(false);
   const [selectedModel, setSelectedModel] = useState("openai/gpt-4o");
-  const accumulatedContentRef = useRef("");
-
-  // Fetch available models
-  const { models, isLoading: isLoadingModels } = useModels({
-    getToken: getIdentityToken,
-    baseUrl: "https://portal.anuma-dev.ai",
-  });
-
-  // Store latest callback in ref so useChatStorage callbacks always have fresh references
-  const setStreamingContentRef = useRef(setStreamingContent);
-  const onMessagesChangeRef = useRef(onMessagesChange);
-
-  useEffect(() => {
-    setStreamingContentRef.current = setStreamingContent;
-    onMessagesChangeRef.current = onMessagesChange;
-  }, [setStreamingContent, onMessagesChange]);
-
-  // Store conversationId in ref for callbacks
-  const conversationIdRef = useRef(conversationId);
-  useEffect(() => {
-    conversationIdRef.current = conversationId;
-  }, [conversationId]);
 
   const {
     isLoading: isChatLoading,
@@ -348,25 +318,11 @@ export default function ChatInput({
     setConversationId,
     getMessages,
     updateConversationTitle,
-  } = useChatStorage({
-    database,
+    models,
+    isLoadingModels,
+  } = useChatStorageSetup({
     conversationId: conversationId ?? undefined,
-    getToken: getIdentityToken,
-    baseUrl: "https://portal.anuma-dev.ai",
-    onData: (chunk: string) => {
-      accumulatedContentRef.current += chunk;
-      setStreamingContentRef.current(accumulatedContentRef.current);
-    },
-    onFinish: async () => {
-      accumulatedContentRef.current = "";
-      setStreamingContentRef.current("");
-      // Note: Messages are refreshed in onSubmit after sendMessage completes
-    },
-    onError: (error: Error) => {
-      console.error("Chat error:", error);
-      accumulatedContentRef.current = "";
-      setStreamingContentRef.current("");
-    },
+    onStreamingContent: setStreamingContent,
   });
 
   // Store setConversationId in ref to avoid dependency issues
@@ -410,7 +366,6 @@ export default function ChatInput({
     setInput("");
     setAttachedImage(null);
 
-    accumulatedContentRef.current = "";
     setStreamingContent("");
 
     // Extract mime type from data URI (format: data:image/jpeg;base64,...)
