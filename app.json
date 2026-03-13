@@ -25,7 +25,7 @@
         },
         "ITSAppUsesNonExemptEncryption": false
       },
-      "appleTeamId": "6NDYZX9Y72"
+      "appleTeamId": "<your-apple-team-id>"
     },
     "android": {
       "adaptiveIcon": {
@@ -35,12 +35,12 @@
       "package": "dev.privy.example"
     },
     "extra": {
-      "privyAppId": "cmjkga3y002g0ju0clwca9wwp",
-      "privyClientId": "client-WY6UFSz2G9sKJj4C2dm8irZomkbg9twZbFs1ez8r4yvrD",
+      "privyAppId": "<your-privy-app-id>",
+      "privyClientId": "<your-privy-client-id>",
       "passkeyAssociatedDomain": "https://<your-associated-domain>",
       "router": {},
       "eas": {
-        "projectId": "a3c36bef-277f-4ca9-8635-03c6d257d0fe"
+        "projectId": "<your-eas-project-id>"
       }
     },
     "plugins": [
@@ -63,6 +63,6 @@
     "experiments": {
       "typedRoutes": true
     },
-    "owner": "zetachain"
+    "owner": "<your-expo-owner>"
   }
 }
