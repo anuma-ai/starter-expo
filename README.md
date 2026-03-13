@@ -28,12 +28,15 @@ pnpm install
 
 2. The Anuma SDK is linked locally from `../sdk`. Make sure the SDK repo is cloned as a sibling directory.
 
-3. Configure your credentials in `app.json` under `expo.extra`:
+3. Copy `.env.example` to `.env.local` and fill in your credentials:
 
-   - `privyAppId` — your Privy app ID from the [Privy Dashboard](https://dashboard.privy.io/)
-   - `privyClientId` — your Privy client ID
+```
+cp .env.example .env.local
+```
 
-4. Set the API base URL in `constants/api.ts` (defaults to `https://portal.anuma-dev.ai`).
+   At minimum you need `EXPO_PUBLIC_PRIVY_APP_ID` and `EXPO_PUBLIC_PRIVY_CLIENT_ID` from the [Privy Dashboard](https://dashboard.privy.io/). For iOS builds, also set `EXPO_PUBLIC_APPLE_TEAM_ID`.
+
+4. The API base URL defaults to `https://portal.anuma-dev.ai` in `constants/api.ts`.
 
 ## Running the App
 
