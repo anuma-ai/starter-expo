@@ -49,30 +49,6 @@ Build and run on Android:
 pnpm run android
 ```
 
-## Project Structure
-
-```
-app/
-  _layout.tsx        Main layout with chat UI, drawer, and navigation
-  index.tsx          Entry route — shows login or empty view
-
-components/
-  ChatInput.tsx      Message input with image attach and model picker
-  ChatMessages.tsx   Message list with markdown rendering
-  ConversationList.tsx  Drawer with conversation history
-  LoginScreen.tsx    OAuth login screen
-  ModelPickerSheet.tsx  Modal for selecting AI models
-
-hooks/
-  useChatStorageSetup.ts  Wraps Anuma SDK's useChatStorage with auth and streaming
-
-constants/
-  api.ts             API base URL
-
-utils/
-  database.ts        WatermelonDB setup with SDK schema and migrations
-```
-
 ## Key Patterns
 
 The app uses the Anuma SDK's `useChatStorage` hook for message persistence. Messages are stored locally in WatermelonDB and synced with the API. Streaming responses arrive via SSE, which requires polyfills configured in `entrypoint.js`.
