@@ -28,6 +28,7 @@ import ConversationList, {
 } from "@/components/ConversationList";
 import { type StoredMessage, type StoredConversation } from "@anuma/sdk/expo";
 import { useChatStorageSetup } from "@/hooks/useChatStorageSetup";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 // UI Message type for ChatMessages (matches ChatMessages MessageContent type)
 type MessageContent =
@@ -172,7 +173,9 @@ function AppContent() {
     }
   }, [user, loadConversations]);
 
-  // Reanimated shared value for smooth gesture-driven animation
+  // Gesture-driven drawer: the drawer slides in from the left using a shared
+  // Reanimated value. A pan gesture on the main content area controls the
+  // translation, snapping open/closed based on velocity and position thresholds.
   const translateX = useSharedValue(-DRAWER_WIDTH);
   const startX = useSharedValue(0);
   const gestureStartedFromEdge = useSharedValue(false);
@@ -419,7 +422,9 @@ export default function RootLayout() {
           },
         }}
       >
-        <AppContent />
+        <ErrorBoundary>
+          <AppContent />
+        </ErrorBoundary>
       </PrivyProvider>
     </GestureHandlerRootView>
   );

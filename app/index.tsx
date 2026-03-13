@@ -1,4 +1,4 @@
-import { SafeAreaView, View } from "react-native";
+import { View } from "react-native";
 import LoginScreen from "@/components/LoginScreen";
 import { usePrivy } from "@privy-io/expo";
 
@@ -9,9 +9,6 @@ export default function Index() {
     return <LoginScreen />;
   }
 
-  return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
-      <View style={{ flex: 1, backgroundColor: "#fff" }} />
-    </SafeAreaView>
-  );
+  // Chat UI is rendered by _layout.tsx when authenticated
+  return <View style={{ flex: 1, backgroundColor: "#fff" }} />;
 }

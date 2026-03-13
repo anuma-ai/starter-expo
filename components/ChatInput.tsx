@@ -1,15 +1,11 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   View,
-  Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
   Image,
-  Modal,
-  Platform,
-  ScrollView,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -18,7 +14,7 @@ import { type StoredMessage } from "@anuma/sdk/expo";
 import { useChatStorageSetup } from "@/hooks/useChatStorageSetup";
 import * as ImagePicker from "expo-image-picker";
 import { GlassView } from "expo-glass-effect";
-import { LinearGradient } from "expo-linear-gradient";
+import ModelPickerSheet from "@/components/ModelPickerSheet";
 
 interface ChatInputProps {
   conversationId: string | null;
@@ -27,275 +23,6 @@ interface ChatInputProps {
   streamingContent: string;
   setStreamingContent: (content: string) => void;
 }
-
-interface Model {
-  id?: string;
-  name?: string;
-  provider?: string;
-}
-
-function ModelPickerSheet({
-  visible,
-  onClose,
-  models,
-  isLoading,
-  selectedModelId,
-  onSelectModel,
-}: {
-  visible: boolean;
-  onClose: () => void;
-  models: Model[];
-  isLoading: boolean;
-  selectedModelId: string;
-  onSelectModel: (modelId: string) => void;
-}) {
-  const insets = useSafeAreaInsets();
-  const [searchQuery, setSearchQuery] = useState("");
-
-  const filteredModels = useMemo(() => {
-    const validModels = models.filter((model) => model.id);
-    if (!searchQuery.trim()) return validModels;
-    const query = searchQuery.toLowerCase();
-    return validModels.filter(
-      (m) =>
-        (m.name || m.id || "").toLowerCase().includes(query) ||
-        (m.provider || "").toLowerCase().includes(query)
-    );
-  }, [models, searchQuery]);
-
-  const handleSelect = (modelId: string) => {
-    onSelectModel(modelId);
-    onClose();
-  };
-
-  return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      presentationStyle={Platform.OS === "ios" ? "pageSheet" : "fullScreen"}
-      onRequestClose={onClose}
-    >
-      <View style={sheetStyles.container}>
-        {/* Grabber - Apple standard appearance */}
-        <View style={sheetStyles.grabberContainer}>
-          <View style={sheetStyles.grabber} />
-        </View>
-
-        {/* Header - Close button on left per Apple HIG */}
-        <View style={sheetStyles.header}>
-          <TouchableOpacity
-            onPress={onClose}
-            style={sheetStyles.closeButton}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            <View style={sheetStyles.closeButtonCircle}>
-              <Ionicons name="close" size={16} color="#3C3C43" />
-            </View>
-          </TouchableOpacity>
-          <Text style={sheetStyles.title}>Models</Text>
-          <View style={sheetStyles.headerSpacer} />
-        </View>
-
-        {/* Content */}
-        {isLoading ? (
-          <View style={sheetStyles.loadingContainer}>
-            <ActivityIndicator size="large" color="#8E8E93" />
-            <Text style={sheetStyles.loadingText}>Loading models...</Text>
-          </View>
-        ) : (
-          <ScrollView
-            style={sheetStyles.list}
-            contentContainerStyle={{
-              paddingTop: 64,
-              paddingBottom: insets.bottom + 20,
-            }}
-            keyboardShouldPersistTaps="handled"
-          >
-            {filteredModels.map((model, index, arr) => (
-              <View key={model.id}>
-                <TouchableOpacity
-                  style={sheetStyles.modelItem}
-                  onPress={() => handleSelect(model.id!)}
-                  activeOpacity={0.7}
-                >
-                  <View style={sheetStyles.modelInfo}>
-                    <Text
-                      style={[
-                        sheetStyles.modelName,
-                        model.id === selectedModelId &&
-                          sheetStyles.modelNameSelected,
-                      ]}
-                      numberOfLines={1}
-                    >
-                      {model.name || model.id}
-                    </Text>
-                    {model.provider && (
-                      <Text style={sheetStyles.modelProvider}>
-                        {model.provider}
-                      </Text>
-                    )}
-                  </View>
-                  {model.id === selectedModelId && (
-                    <Ionicons name="checkmark" size={22} color="#007AFF" />
-                  )}
-                </TouchableOpacity>
-                {index < arr.length - 1 && (
-                  <View style={sheetStyles.separator} />
-                )}
-              </View>
-            ))}
-          </ScrollView>
-        )}
-
-        {/* Search Bar - Floating with gradient behind */}
-        <View style={sheetStyles.searchOverlay}>
-          <LinearGradient
-            colors={["#f5f5f5", "#f5f5f5", "#f5f5f5", "rgba(245, 245, 245, 0)"]}
-            locations={[0, 0.5, 0.75, 1]}
-            style={sheetStyles.searchGradient}
-          />
-          <View style={sheetStyles.searchContainer}>
-            <GlassView style={sheetStyles.searchBar}>
-              <Ionicons name="search" size={16} color="#8E8E93" />
-              <TextInput
-                style={sheetStyles.searchInput}
-                placeholder="Search"
-                placeholderTextColor="#8E8E93"
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-                returnKeyType="search"
-                clearButtonMode="while-editing"
-              />
-            </GlassView>
-          </View>
-        </View>
-      </View>
-    </Modal>
-  );
-}
-
-const sheetStyles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f5f5f5",
-  },
-  grabberContainer: {
-    alignItems: "center",
-    paddingTop: 6,
-    paddingBottom: 8,
-    zIndex: 2,
-  },
-  grabber: {
-    width: 36,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: "rgba(60, 60, 67, 0.3)",
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-    minHeight: 44,
-    zIndex: 2,
-  },
-  closeButton: {
-    width: 44,
-    justifyContent: "center",
-    alignItems: "flex-start",
-  },
-  closeButtonCircle: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: "rgba(118, 118, 128, 0.12)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  headerSpacer: {
-    width: 44,
-  },
-  title: {
-    flex: 1,
-    fontSize: 17,
-    fontWeight: "600",
-    color: "#000",
-    textAlign: "center",
-  },
-  searchOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 1,
-    height: 160,
-  },
-  searchGradient: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  searchContainer: {
-    paddingHorizontal: 16,
-    paddingTop: 70,
-  },
-  searchBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderRadius: 20,
-    height: 40,
-    paddingHorizontal: 12,
-    gap: 8,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 17,
-    color: "#000",
-    padding: 0,
-  },
-  loadingContainer: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 12,
-  },
-  loadingText: {
-    fontSize: 16,
-    color: "#8E8E93",
-  },
-  list: {
-    flex: 1,
-  },
-  modelItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-  },
-  separator: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: "rgba(60, 60, 67, 0.12)",
-    marginLeft: 20,
-  },
-  modelInfo: {
-    flex: 1,
-    gap: 2,
-  },
-  modelName: {
-    fontSize: 16,
-    fontWeight: "400",
-    color: "#000",
-  },
-  modelNameSelected: {
-    color: "#007AFF",
-  },
-  modelProvider: {
-    fontSize: 13,
-    color: "#8E8E93",
-  },
-});
 
 export default function ChatInput({
   conversationId,
@@ -325,13 +52,16 @@ export default function ChatInput({
     onStreamingContent: setStreamingContent,
   });
 
-  // Store setConversationId in ref to avoid dependency issues
+  // Bidirectional conversation ID sync between parent (_layout) and the SDK hook:
+  // - Parent changes ID (e.g. user picks a conversation) → sync down to hook
+  // - Hook creates a new conversation internally → notify parent
+  // The isSyncingFromParent flag prevents the "notify parent" effect from firing
+  // when the change originated from the parent, avoiding an infinite loop.
   const setConversationIdRef = useRef(setConversationId);
   useEffect(() => {
     setConversationIdRef.current = setConversationId;
   }, [setConversationId]);
 
-  // Track if we're syncing from parent to avoid loops
   const isSyncingFromParent = useRef(false);
 
   // Sync conversationId from parent (only when parent initiates the change)
@@ -376,7 +106,10 @@ export default function ChatInput({
       ? [{ id: "temp", name: "image", type: mimeType, size: 0, url: attachedImage }]
       : undefined;
 
-    // Show user message immediately (optimistic update)
+    // Optimistic update: show the user's message in the UI immediately rather
+    // than waiting for the API round-trip. On error we revert to the DB state.
+    // After success we merge stored messages with the optimistic file URLs,
+    // because the DB strips data URIs from attachments.
     const existingMessages = currentConversationId
       ? await getMessages(currentConversationId)
       : [];
@@ -407,7 +140,6 @@ export default function ChatInput({
     });
 
     if (result.error) {
-      console.error("Chat error:", result.error);
       // Revert optimistic update on error
       if (currentConversationId) {
         const messages = await getMessages(currentConversationId);
