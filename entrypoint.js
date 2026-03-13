@@ -1,5 +1,6 @@
 // entrypoint.js
 
+// #region polyfills
 // Import required polyfills first
 // IMPORTANT: These polyfills must be installed in this order
 import "react-native-get-random-values";
@@ -22,6 +23,7 @@ if (typeof globalThis.TransformStream === "undefined") {
 
 // SDK polyfills (TextDecoderStream, etc.)
 import "@anuma/sdk/polyfills";
+// #endregion polyfills
 
 // Then import the expo router
 import "expo-router/entry";

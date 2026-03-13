@@ -22,6 +22,7 @@ export function useChatStorageSetup(options: UseChatStorageSetupOptions = {}) {
     onErrorRef.current = onError;
   }, [onStreamingContent, onError]);
 
+  // #region hookInit
   const chatStorage = useChatStorage({
     database,
     conversationId,
@@ -42,16 +43,21 @@ export function useChatStorageSetup(options: UseChatStorageSetupOptions = {}) {
       onErrorRef.current?.(error);
     },
   });
+  // #endregion hookInit
 
+  // #region models
   const { models, isLoading: isLoadingModels } = useModels({
     getToken: getIdentityToken,
     baseUrl: API_BASE_URL,
   });
+  // #endregion models
 
+  // #region returnValue
   return {
     ...chatStorage,
     models,
     isLoadingModels,
     accumulatedContentRef,
   };
+  // #endregion returnValue
 }
