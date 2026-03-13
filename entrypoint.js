@@ -35,7 +35,7 @@ console.log(
 );
 
 // Import SDK polyfills (TextDecoderStream, etc.)
-import "@reverbia/sdk/polyfills";
+import "@anuma/sdk/polyfills";
 console.log(
   "[Polyfills] After SDK: TextDecoderStream=",
   typeof globalThis.TextDecoderStream

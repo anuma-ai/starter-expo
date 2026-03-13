@@ -2,8 +2,8 @@
 
 An example mobile AI chat application built with [Expo](https://expo.dev/) and
 React Native. The app uses [Privy](https://www.privy.io/) for authentication
-(Google OAuth) and the [Reverbia
-SDK](https://www.npmjs.com/package/@reverbia/sdk) for AI-powered conversations
+(Google OAuth) and the [Anuma
+SDK](https://www.npmjs.com/package/@anuma/sdk) for AI-powered conversations
 with real-time streaming responses.
 
 ## Features

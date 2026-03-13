@@ -4,11 +4,11 @@ import {
   chatStorageSchema,
   ChatMessage,
   ChatConversation,
-} from "@reverbia/sdk/expo";
+} from "@anuma/sdk/expo";
 
 const adapter = new SQLiteAdapter({
   schema: chatStorageSchema,
-  dbName: "reverbia_chat",
+  dbName: "anuma_chat",
   jsi: true,
   onSetUpError: (error) => {
     console.error("Database setup error:", error);

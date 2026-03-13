@@ -20,7 +20,7 @@ import {
   useImageGeneration,
   useModels,
   type StoredMessage,
-} from "@reverbia/sdk/expo";
+} from "@anuma/sdk/expo";
 import { Database } from "@nozbe/watermelondb";
 import * as ImagePicker from "expo-image-picker";
 import { GlassView } from "expo-glass-effect";

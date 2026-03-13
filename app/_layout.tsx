@@ -32,7 +32,7 @@ import {
   type StoredMessage,
   type StoredConversation,
   useChatStorage,
-} from "@reverbia/sdk/expo";
+} from "@anuma/sdk/expo";
 
 // UI Message type for ChatMessages (matches ChatMessages MessageContent type)
 type MessageContent =

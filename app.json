@@ -24,7 +24,8 @@
           "NSAllowsArbitraryLoads": true
         },
         "ITSAppUsesNonExemptEncryption": false
-      }
+      },
+      "appleTeamId": "6NDYZX9Y72"
     },
     "android": {
       "adaptiveIcon": {
