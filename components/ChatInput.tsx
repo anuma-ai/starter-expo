@@ -448,6 +448,7 @@ export default function ChatInput({
       messages: [{ role: "user", content: userContent }],
       model: selectedModel,
       includeHistory: true,
+      serverTools: [],
     });
 
     if (result.error) {
