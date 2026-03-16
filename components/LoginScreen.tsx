@@ -22,7 +22,9 @@ export default function LoginScreen() {
     onError: (err) => setError(err.message || "Login failed"),
   });
 
-  const isAwaitingOtp = emailLogin.state.status === "awaiting-code-input";
+  const isAwaitingOtp =
+    emailLogin.state.status === "awaiting-code-input" ||
+    emailLogin.state.status === "submitting-code";
   const isLoading =
     oauth.state.status === "loading" ||
     emailLogin.state.status === "sending-code" ||
