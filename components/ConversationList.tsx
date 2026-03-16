@@ -81,6 +81,7 @@ export default function ConversationList({
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Conversations</Text>
         <TouchableOpacity
+          testID="new-conversation-button"
           onPress={onNewConversation}
           style={styles.newButton}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}

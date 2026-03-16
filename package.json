@@ -7,10 +7,13 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "lint": "expo lint",
-    "generate": "node scripts/generate-docs.mjs"
+    "generate": "node scripts/generate-docs.mjs",
+    "e2e": "bash scripts/e2e.sh",
+    "e2e:test": "maestro test .maestro/",
+    "e2e:record": "E2E_RECORD=true bash scripts/e2e.sh"
   },
   "dependencies": {
-    "@anuma/sdk": "1.0.0-next.20260313144326",
+    "@anuma/sdk": "1.0.0-next.20260316151322",
     "@ethersproject/shims": "^5.8.0",
     "@expo-google-fonts/inter": "^0.3.0",
     "@expo/vector-icons": "^14.1.0",

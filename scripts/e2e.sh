@@ -1,0 +1,53 @@
+#!/bin/bash
+set -e
+
+DEVICE_NAME="${E2E_DEVICE:-iPhone 16e}"
+BUNDLE_ID="dev.privy.example"
+RECORD="${E2E_RECORD:-false}"
+
+cleanup() {
+  echo "==> Cleaning up..."
+  kill $METRO_PID 2>/dev/null || true
+  # Wait briefly for Metro to release the port
+  sleep 1
+  # Kill anything still on port 8081
+  lsof -ti:8081 | xargs kill -9 2>/dev/null || true
+  xcrun simctl shutdown "$DEVICE_NAME" 2>/dev/null || true
+}
+trap cleanup EXIT
+
+echo "==> Killing any existing Metro on port 8081..."
+lsof -ti:8081 | xargs kill -9 2>/dev/null || true
+
+echo "==> Booting simulator: $DEVICE_NAME"
+xcrun simctl boot "$DEVICE_NAME" 2>/dev/null || true
+
+echo "==> Waiting for simulator to be ready..."
+xcrun simctl bootstatus "$DEVICE_NAME" -b
+
+echo "==> Building and installing app..."
+npx expo run:ios --device "$DEVICE_NAME" --no-bundler &
+BUILD_PID=$!
+
+# Start Metro bundler in the background
+npx expo start --dev-client --port 8081 &
+METRO_PID=$!
+
+# Wait for the build to finish
+wait $BUILD_PID
+
+echo "==> Waiting for app to be installed..."
+sleep 5
+
+if [ "$RECORD" = "true" ]; then
+  echo "==> Recording Maestro tests..."
+  mkdir -p e2e-recordings
+  for flow in .maestro/*.yaml; do
+    name=$(basename "$flow" .yaml)
+    echo "==> Recording: $name"
+    maestro record --local "$flow" "e2e-recordings/$name.mp4" || true
+  done
+else
+  echo "==> Running Maestro tests..."
+  maestro test .maestro/
+fi

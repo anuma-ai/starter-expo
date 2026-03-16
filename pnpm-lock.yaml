@@ -6,14 +6,15 @@ settings:
 
 overrides:
   viem: 2.32.0
+  '@anuma/sdk': file:../sdk
 
 importers:
 
   .:
     dependencies:
       '@anuma/sdk':
-        specifier: 1.0.0-next.20260313144326
-        version: 1.0.0-next.20260313144326(@nozbe/watermelondb@0.28.0)(react-dom@19.0.0(react@19.0.0))(react-native@0.79.2(@babel/core@7.28.5)(@types/react@19.0.14)(bufferutil@4.0.9)(react@19.0.0)(utf-8-validate@5.0.10))(react@19.0.0)(zod@3.25.76)
+        specifier: 1.0.0-next.20260316151322
+        version: 1.0.0-next.20260316151322(@nozbe/watermelondb@0.28.0)(react-dom@19.0.0(react@19.0.0))(react-native@0.79.2(@babel/core@7.28.5)(@types/react@19.0.14)(bufferutil@4.0.9)(react@19.0.0)(utf-8-validate@5.0.10))(react@19.0.0)(zod@3.25.76)
       '@ethersproject/shims':
         specifier: ^5.8.0
         version: 5.8.0
@@ -186,8 +187,8 @@ packages:
   '@anuma/portal@1.0.0-next.20260306183544':
     resolution: {integrity: sha512-kfvuWWwwV3Gtt4vbBp7cFWmWqI/0AevOThGUkoFUscb4ZLU25ZIcFBgXge28G6RJWNTHpLUO8gqoFOUdo1/jtA==}
 
-  '@anuma/sdk@1.0.0-next.20260313144326':
-    resolution: {integrity: sha512-7oiFcN1A0T6aIxahlMK5ygWRtymsX7cGeLETGYFtVJxPxTCD5l2hWIyS1LjI8xmox5gUs0DBhpzXFdFCgBs1WA==}
+  '@anuma/sdk@1.0.0-next.20260316151322':
+    resolution: {integrity: sha512-XOhE5yuoXx27Bv1Tt+XgLXq391Tfmttjf+bH9GdPuW+7lLOVWOHeQltbqfJ2W5x4A9HSdZ/UpZQS0Pipi9WdlA==}
     peerDependencies:
       '@huggingface/transformers': ^3.0.0
       '@nozbe/watermelondb': ^0.28.0
@@ -4966,7 +4967,7 @@ snapshots:
 
   '@anuma/portal@1.0.0-next.20260306183544': {}
 
-  '@anuma/sdk@1.0.0-next.20260313144326(@nozbe/watermelondb@0.28.0)(react-dom@19.0.0(react@19.0.0))(react-native@0.79.2(@babel/core@7.28.5)(@types/react@19.0.14)(bufferutil@4.0.9)(react@19.0.0)(utf-8-validate@5.0.10))(react@19.0.0)(zod@3.25.76)':
+  '@anuma/sdk@1.0.0-next.20260316151322(@nozbe/watermelondb@0.28.0)(react-dom@19.0.0(react@19.0.0))(react-native@0.79.2(@babel/core@7.28.5)(@types/react@19.0.14)(bufferutil@4.0.9)(react@19.0.0)(utf-8-validate@5.0.10))(react@19.0.0)(zod@3.25.76)':
     dependencies:
       '@anuma/portal': 1.0.0-next.20260306183544
       ai: 5.0.93(zod@3.25.76)

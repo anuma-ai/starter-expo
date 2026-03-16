@@ -1,0 +1,28 @@
+appId: dev.privy.example
+---
+
+# Log in first
+- runFlow: login.yaml
+
+# Verify the chat screen renders with empty state
+- assertVisible: "Start a conversation"
+
+# Type a message and verify input
+- tapOn:
+    id: "chat-input"
+- inputText: "Hello"
+- assertVisible: "Hello"
+
+# Send the message
+- tapOn:
+    id: "send-button"
+
+# Verify user message appears
+- assertVisible: "Hello"
+- assertNotVisible: "Start a conversation"
+
+# Wait for assistant response
+- extendedWaitUntil:
+    visible:
+      id: "assistant-message"
+    timeout: 30000

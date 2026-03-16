@@ -1,0 +1,24 @@
+appId: dev.privy.example
+---
+
+# Log in first
+- runFlow: login.yaml
+
+# Wait for chat screen
+- assertVisible: "Start a conversation"
+
+# Ask for the current time in a timezone (triggers get_current_time tool)
+- tapOn:
+    id: "chat-input"
+- inputText: "What time is it in New York?"
+- tapOn:
+    id: "send-button"
+
+# Verify user message appears
+- assertVisible: "What time is it in New York?"
+
+# Wait for the assistant to respond (tool executes and model replies)
+- extendedWaitUntil:
+    visible:
+      id: "assistant-message"
+    timeout: 60000
