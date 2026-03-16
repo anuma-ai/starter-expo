@@ -58,6 +58,7 @@ automatically.
       model: selectedModel,
       includeHistory: true,
       serverTools: [],
+      clientTools: [timezoneTool],
     });
 ```
 
