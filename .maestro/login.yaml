@@ -7,6 +7,7 @@ appId: dev.privy.example
 - extendedWaitUntil:
     visible: "Start a conversation"
     timeout: 20000
+    optional: true
 
 # If we're on the chat screen, we're done. If the wait timed out,
 # we're on the login screen and need to authenticate.

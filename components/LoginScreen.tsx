@@ -23,10 +23,11 @@ export default function LoginScreen() {
   });
 
   const isAwaitingOtp = emailLogin.state.status === "awaiting-code-input";
-  const isLoading =
-    oauth.state.status === "loading" ||
+  const isOAuthLoading = oauth.state.status === "loading";
+  const isEmailLoading =
     emailLogin.state.status === "sending-code" ||
     emailLogin.state.status === "submitting-code";
+  const isLoading = isOAuthLoading || isEmailLoading;
 
   const handleSendCode = () => {
     if (!email.trim()) return;
@@ -62,7 +63,7 @@ export default function LoginScreen() {
               onPress={handleSendCode}
               disabled={isLoading || !email.trim()}
             >
-              {isLoading ? (
+              {isEmailLoading ? (
                 <ActivityIndicator color="#fff" size="small" />
               ) : (
                 <Text style={styles.buttonText}>Continue with email</Text>
@@ -86,7 +87,7 @@ export default function LoginScreen() {
               onPress={handleSubmitCode}
               disabled={isLoading || !otp.trim()}
             >
-              {isLoading ? (
+              {isEmailLoading ? (
                 <ActivityIndicator color="#fff" size="small" />
               ) : (
                 <Text style={styles.buttonText}>Verify</Text>
@@ -103,11 +104,15 @@ export default function LoginScreen() {
 
         <TouchableOpacity
           testID="sign-in-button"
-          style={[styles.button, styles.googleButton]}
+          style={[styles.button, styles.googleButton, isLoading && styles.buttonDisabled]}
           onPress={() => oauth.login({ provider: "google" })}
           disabled={isLoading}
         >
-          <Text style={styles.googleButtonText}>Sign in with Google</Text>
+          {isOAuthLoading ? (
+            <ActivityIndicator color="#000" size="small" />
+          ) : (
+            <Text style={styles.googleButtonText}>Sign in with Google</Text>
+          )}
         </TouchableOpacity>
       </View>
 
