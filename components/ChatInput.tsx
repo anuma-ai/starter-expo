@@ -12,6 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { MenuView } from "@react-native-menu/menu";
 import { type StoredMessage } from "@anuma/sdk/expo";
 import { useChatStorageSetup } from "@/hooks/useChatStorageSetup";
+import { timezoneTool } from "@/tools/timezone";
 import * as ImagePicker from "expo-image-picker";
 import { GlassView } from "expo-glass-effect";
 import ModelPickerSheet from "@/components/ModelPickerSheet";
@@ -144,6 +145,7 @@ export default function ChatInput({
       model: selectedModel,
       includeHistory: true,
       serverTools: [],
+      clientTools: [timezoneTool],
     });
     // #endregion sendCall
 
