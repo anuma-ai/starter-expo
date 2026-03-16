@@ -6,7 +6,6 @@ settings:
 
 overrides:
   viem: 2.32.0
-  '@anuma/sdk': file:../sdk
 
 importers:
 
