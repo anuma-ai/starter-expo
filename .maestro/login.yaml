@@ -1,0 +1,35 @@
+appId: dev.privy.example
+---
+
+- launchApp
+
+# Wait for Privy to restore session (briefly shows login before redirecting)
+- extendedWaitUntil:
+    visible: "Start a conversation"
+    timeout: 20000
+
+# If we're on the chat screen, we're done. If the wait timed out,
+# we're on the login screen and need to authenticate.
+- runFlow:
+    when:
+      notVisible: "Start a conversation"
+    commands:
+      - tapOn:
+          id: "email-input"
+      - inputText: "test-4546@privy.io"
+      - hideKeyboard
+      - tapOn:
+          id: "send-code-button"
+      - extendedWaitUntil:
+          visible:
+            id: "otp-input"
+          timeout: 10000
+      - tapOn:
+          id: "otp-input"
+      - inputText: "914515"
+      - hideKeyboard
+      - tapOn:
+          id: "submit-code-button"
+      - extendedWaitUntil:
+          visible: "Start a conversation"
+          timeout: 15000

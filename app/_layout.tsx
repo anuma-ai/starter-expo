@@ -91,7 +91,7 @@ function ConversationButton({ onPress }: { onPress: () => void }) {
         { top: insets.top + 8 },
       ]}
     >
-      <TouchableOpacity onPress={onPress}>
+      <TouchableOpacity testID="conversations-button" onPress={onPress}>
         <GlassView style={styles.floatingButton} isInteractive>
           <Ionicons name="chatbubbles-outline" size={20} color="#3C3C43" />
         </GlassView>

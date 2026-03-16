@@ -278,6 +278,7 @@ export default function ChatInput({
             isInteractive
           >
             <TextInput
+              testID="chat-input"
               style={styles.input}
               value={input}
               onChangeText={(text) => {
@@ -294,6 +295,7 @@ export default function ChatInput({
           </GlassView>
 
           <TouchableOpacity
+            testID="send-button"
             onPress={onSubmit}
             disabled={isLoading || !input.trim()}
           >

@@ -108,7 +108,7 @@ export default function ChatMessages({ messages }: ChatMessagesProps) {
 
   if (messages.length === 0) {
     return (
-      <View style={styles.emptyContainer}>
+      <View testID="empty-state" style={styles.emptyContainer}>
         <Text style={styles.emptyText}>Start a conversation</Text>
       </View>
     );
@@ -117,6 +117,7 @@ export default function ChatMessages({ messages }: ChatMessagesProps) {
   return (
     <View style={styles.container}>
       <ScrollView
+        testID="chat-messages"
         ref={scrollViewRef}
         style={styles.scrollView}
         contentContainerStyle={[
