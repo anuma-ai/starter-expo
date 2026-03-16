@@ -17,6 +17,12 @@ appId: dev.privy.example
 - tapOn:
     id: "send-button"
 
-# Verify user message appears and input clears
+# Verify user message appears
 - assertVisible: "Hello"
 - assertNotVisible: "Start a conversation"
+
+# Wait for assistant response
+- extendedWaitUntil:
+    visible:
+      id: "assistant-message"
+    timeout: 30000

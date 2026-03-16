@@ -145,6 +145,7 @@ export default function ChatMessages({ messages }: ChatMessagesProps) {
           return (
             <View
               key={index}
+              testID={isUser ? "user-message" : "assistant-message"}
               style={[
                 styles.messageContainer,
                 isUser
