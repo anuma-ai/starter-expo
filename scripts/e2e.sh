@@ -3,6 +3,7 @@ set -e
 
 DEVICE_NAME="${E2E_DEVICE:-iPhone 16e}"
 BUNDLE_ID="dev.privy.example"
+RECORD="${E2E_RECORD:-false}"
 
 cleanup() {
   echo "==> Cleaning up..."
@@ -38,5 +39,15 @@ wait $BUILD_PID
 echo "==> Waiting for app to be installed..."
 sleep 5
 
-echo "==> Running Maestro tests..."
-maestro test .maestro/
+if [ "$RECORD" = "true" ]; then
+  echo "==> Recording Maestro tests..."
+  mkdir -p e2e-recordings
+  for flow in .maestro/*.yaml; do
+    name=$(basename "$flow" .yaml)
+    echo "==> Recording: $name"
+    maestro record --local "$flow" "e2e-recordings/$name.mp4" || true
+  done
+else
+  echo "==> Running Maestro tests..."
+  maestro test .maestro/
+fi
