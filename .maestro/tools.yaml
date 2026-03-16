@@ -14,6 +14,7 @@ appId: dev.privy.example
 - tapOn:
     id: "send-button"
 
-# Verify user message appears and empty state is gone
+# Verify the tool auto-executes and the model responds with the time.
+# Use testID on the assistant message to detect the response appeared.
 - assertVisible: "What time is it in New York?"
 - assertNotVisible: "Start a conversation"

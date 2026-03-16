@@ -240,8 +240,8 @@ function AppContent() {
       }
     });
 
-  // Animated style for the sliding container
-  const animatedStyle = useAnimatedStyle(() => ({
+  // Animated style for the drawer (slides in from left)
+  const drawerAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: translateX.value }],
   }));
 
@@ -337,8 +337,34 @@ function AppContent() {
   return (
     <GestureDetector gesture={panGesture}>
       <View style={styles.rootContainer}>
-        <Animated.View style={[styles.slidingContainer, animatedStyle]}>
-          {/* Drawer */}
+        {/* Main Content (static, no transform) */}
+        <View style={styles.mainContent}>
+          <ChatMessages messages={displayMessages} />
+          <ConversationButton onPress={() => setDrawerOpen(!drawerOpen)} />
+          <MenuButton />
+          <ChatInput
+            conversationId={currentConversationId}
+            onConversationChange={handleConversationChange}
+            onMessagesChange={handleMessagesChange}
+            streamingContent={streamingContent}
+            setStreamingContent={setStreamingContent}
+          />
+
+          {/* Overlay to close drawer when tapping on main content */}
+          <Animated.View
+            style={[styles.overlay, overlayAnimatedStyle]}
+            pointerEvents={drawerOpen ? "auto" : "none"}
+          >
+            <TouchableOpacity
+              style={StyleSheet.absoluteFill}
+              activeOpacity={1}
+              onPress={() => setDrawerOpen(false)}
+            />
+          </Animated.View>
+        </View>
+
+        {/* Drawer (slides in from left, overlays main content) */}
+        <Animated.View style={[styles.drawerContainer, drawerAnimatedStyle]}>
           <ConversationList
             conversations={conversations}
             currentConversationId={currentConversationId}
@@ -346,32 +372,6 @@ function AppContent() {
             onNewConversation={handleNewConversation}
             onDeleteConversation={handleDeleteConversation}
           />
-
-          {/* Main Content */}
-          <View style={styles.mainContent}>
-            <ChatMessages messages={displayMessages} />
-            <ConversationButton onPress={() => setDrawerOpen(!drawerOpen)} />
-            <MenuButton />
-            <ChatInput
-              conversationId={currentConversationId}
-              onConversationChange={handleConversationChange}
-              onMessagesChange={handleMessagesChange}
-              streamingContent={streamingContent}
-              setStreamingContent={setStreamingContent}
-            />
-
-            {/* Overlay to close drawer when tapping on main content */}
-            <Animated.View
-              style={[styles.overlay, overlayAnimatedStyle]}
-              pointerEvents={drawerOpen ? "auto" : "none"}
-            >
-              <TouchableOpacity
-                style={StyleSheet.absoluteFill}
-                activeOpacity={1}
-                onPress={() => setDrawerOpen(false)}
-              />
-            </Animated.View>
-          </View>
         </Animated.View>
       </View>
     </GestureDetector>
@@ -381,22 +381,26 @@ function AppContent() {
 const styles = StyleSheet.create({
   rootContainer: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#fff",
     overflow: "hidden",
   },
-  slidingContainer: {
-    flex: 1,
-    flexDirection: "row",
-    width: SCREEN_WIDTH + DRAWER_WIDTH,
-  },
   mainContent: {
-    width: SCREEN_WIDTH,
+    flex: 1,
     backgroundColor: "#fff",
+  },
+  drawerContainer: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    left: 0,
+    width: DRAWER_WIDTH,
+    backgroundColor: "#f5f5f5",
+    zIndex: 200,
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "#000",
-    zIndex: 50,
+    zIndex: 150,
   },
   floatingButtonContainer: {
     position: "absolute",

@@ -68,6 +68,7 @@
   "private": true,
   "pnpm": {
     "overrides": {
+      "@anuma/sdk": "file:../sdk",
       "viem": "2.32.0"
     }
   }
